@@ -19,6 +19,7 @@ typedef struct Global {
     int exit_code;
     SDL_Event *event;
     SDL_Texture **sprites;
+    unsigned int tick_count;
 } Global;
 
 #endif
