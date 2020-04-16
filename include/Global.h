@@ -11,6 +11,7 @@ typedef struct Global {
         SDL_Window *window;
         int width;
         int height;
+        SDL_bool fullscreen;
     } Window;
     SDL_Renderer *renderer;
     char *base_path;
