@@ -2,6 +2,7 @@
 #define GLOBAL_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_render.h>
 
 #include "content.h"
 
@@ -15,7 +16,8 @@ typedef struct Global {
     char *base_path;
     SDL_bool should_quit;
     int exit_code;
-    SDL_Texture sprites[NUM_OF_CONTENTS];
+    SDL_Event *event;
+    SDL_Texture **sprites;
 } Global;
 
 #endif
