@@ -77,15 +77,16 @@ void update(Global *global) {
     } */
 }
 
-
-#define GET_SPRITE(NAME) *(global->sprites + (NAME * sizeof(SDL_Texture*)))
-#define DRAW(NAME, X, Y) buffer_rect.x = X; buffer_rect.y = Y; buffer_rect.w = (int) ( ((float) SIZES[NAME][WIDTH]) / ((float) WINDOW_DEFAULT_WIDTH) * global->Window.width ); buffer_rect.h = (int) ( (float) SIZES[NAME][HEIGHT] / (float) WINDOW_DEFAULT_HEIGHT * global->Window.height); SDL_RenderCopy(global->renderer, GET_SPRITE(NAME), NULL, &buffer_rect)
+#define GET_TEXTURE(NAME) *(global->sprites + (NAME * sizeof(SDL_Texture*)))
+#define DRAW(NAME, X, Y) buffer_rect.x = X; buffer_rect.y = Y; buffer_rect.w = (int) ( ((float) SIZES[NAME][WIDTH]) / ((float) WINDOW_DEFAULT_WIDTH) * global->Window.width ); buffer_rect.h = (int) ( (float) SIZES[NAME][HEIGHT] / (float) WINDOW_DEFAULT_HEIGHT * global->Window.height); SDL_RenderCopy(global->renderer, GET_TEXTURE(NAME), NULL, &buffer_rect)
 void draw(Global *global) {
     SDL_Rect buffer_rect;
     SDL_Texture *buffer_texture;
     SDL_RenderClear(global->renderer);
-    SDL_RenderCopy(global->renderer, GET_SPRITE(ICE_MOUNTAIN), NULL, NULL);
+    SDL_RenderCopy(global->renderer, GET_TEXTURE(ICE_MOUNTAIN), NULL, NULL);
     // SIZES is declared in content.h
+    SDL_SetTextureBlendMode(GET_TEXTURE(TITLE), SDL_BLENDMODE_BLEND);
+    SDL_SetTextureAlphaMod(GET_TEXTURE(TITLE), SDL_GetTicks() % 255);
     DRAW(TITLE, (global->Window.width - SIZES[TITLE][WIDTH]) / 2, (global->Window.height / 4));
     DRAW(PRESS_ANY_KEY, (global->Window.width - SIZES[PRESS_ANY_KEY][WIDTH]) / 2, global->Window.height / 4 * 3);
     SDL_RenderPresent(global->renderer);
