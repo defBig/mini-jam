@@ -15,9 +15,8 @@ enum {NO_FLAGS = 0};
 enum {GET_BEST_RENDERER_AVAILABLE = -1};
 
 void initialize(Global *global) {
-    if (!global->sprites) {
+    if (!global->sprites)
         SDL_Log("Allocation error: the game was unable to allocate %d bytes in the heap", sizeof(SDL_Texture*) * NUM_OF_CONTENTS);
-    }
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
         SDL_Log("SDL initialization error: %s", SDL_GetError());
@@ -51,8 +50,7 @@ void load_content(Global* global, char *contents[]) {
     SDL_Surface *surfaces[NUM_OF_CONTENTS];
 
     for (int i = 0; i < NUM_OF_CONTENTS; i++) {
-        surfaces[i] = SDL_LoadBMP(concat(buffer, global->base_path, contents[i]));
-        if (!surfaces[i]) {
+        if ( !( surfaces[i] = SDL_LoadBMP(concat(buffer, global->base_path, contents[i])) ) ) {
             SDL_Log("Surface creation error: %s", SDL_GetError());
             global->should_quit = SDL_TRUE;
             global->exit_code = EXIT_FAILURE;
@@ -75,6 +73,7 @@ void update(Global *global) {
     else if (global->event->type == SDL_WINDOWEVENT && global->event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
         SDL_GetWindowSize(global->Window.window, &(global->Window.width), &(global->Window.height));
     }
+    else if (keyboard_state[SDL_SCANCODE_F]) SDL_SetWindowFullscreen(global->Window.window, SDL_WINDOW_FULLSCREEN);
 }
 
 #define GET_TEXTURE(NAME) *(global->sprites + (NAME * sizeof(SDL_Texture*)))
@@ -84,37 +83,19 @@ void draw(Global *global) {
     SDL_Texture *buffer_texture;
     SDL_RenderClear(global->renderer);
     SDL_RenderCopy(global->renderer, GET_TEXTURE(ICE_MOUNTAIN), NULL, NULL);
-    /*
-    // SIZES is declared in content.h
-    if (global->tick_count % 255 < 50) SDL_SetTextureAlphaMod(GET_TEXTURE(TITLE), global->tick_count % 255 + 50);
-    else SDL_SetTextureAlphaMod(GET_TEXTURE(TITLE), global->tick_count % 255);
-    */
+
     DRAW(TITLE, (global->Window.width - SIZES[TITLE][WIDTH]) / 2, (global->Window.height / 4));
-    //unsigned int tick_snapshot = global->tick_count / 10;
 /*
-    if (tick_snapshot % 255 == 50) {
-        if (first_run) first_run = SDL_FALSE;
-        else {
-            descending = !descending;
-            SDL_SetTextureAlphaMod(GET_TEXTURE(PRESS_ANY_KEY), 50);
-        }
-    }
-    else if (tick_snapshot % 255 == 0) {
-        descending = !descending;
-        SDL_SetTextureAlphaMod(GET_TEXTURE(PRESS_ANY_KEY), 255);
-    }
-    else if (tick_snapshot % 255 < 50 && descending) {
-        SDL_Log("%d", tick_snapshot % 255);
-        SDL_SetTextureAlphaMod(GET_TEXTURE(PRESS_ANY_KEY), tick_snapshot % 255);
-    }
-    else
-        SDL_SetTextureAlphaMod(GET_TEXTURE(PRESS_ANY_KEY), tick_snapshot % 255);
-*/
     static int i = 0;
-    if (global->tick_count / 1000 / 255 & 1) i = 255 - global->tick_count / 1000 % 255;
-    else i = global->tick_count / 1000 % 255;
+    static SDL_bool ascending = SDL_FALSE;
+    if (i == 0 || i == 256) ascending = !ascending;
+    if (ascending) i += global->tick_count / 100 % 255;
+    else i = 255 - (global->tick_count / 100 - 255);
+    SDL_Log("%d", i);
     SDL_SetTextureAlphaMod(GET_TEXTURE(PRESS_ANY_KEY), i);
-    DRAW(PRESS_ANY_KEY, (global->Window.width - SIZES[PRESS_ANY_KEY][WIDTH]) / 2, global->Window.height / 4 * 3);
+*/
+    DRAW(PRESS_ANY_KEY, (global->Window.width - SIZES[PRESS_ANY_KEY][WIDTH]) / 2, (global->Window.height / 4) * 3);
+
     SDL_RenderPresent(global->renderer);
 }
 
