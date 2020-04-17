@@ -20,6 +20,9 @@ typedef struct Global {
     SDL_Event *event;
     SDL_Texture **sprites;
     unsigned int tick_count;
+    int stage;
+    SDL_Rect rects[NUM_OF_CONTENTS];
+    int speeds[NUM_OF_CONTENTS];
 } Global;
 
 #endif

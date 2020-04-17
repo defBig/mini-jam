@@ -13,6 +13,9 @@ enum {WINDOW_DEFAULT_WIDTH = 1280};
 enum {WINDOW_DEFAULT_HEIGHT = 720};
 enum {NO_FLAGS = 0};
 enum {GET_BEST_RENDERER_AVAILABLE = -1};
+enum {TITLE_SCREEN = 0};
+
+int VALID_KEYS[8] = {SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, SDL_SCANCODE_W, SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D};
 
 void initialize(Global *global) {
     if (!global->sprites)
@@ -56,6 +59,7 @@ void load_content(Global* global, char *contents[]) {
             global->exit_code = EXIT_FAILURE;
             break;
         }
+        SDL_SetColorKey(surfaces[i], SDL_TRUE, SDL_MapRGB(surfaces[i]->format, 6, 6, 6));
         *(global->sprites + (i * sizeof(SDL_Texture*))) = SDL_CreateTextureFromSurface(global->renderer, surfaces[i]);
         SDL_SetTextureBlendMode(*(global->sprites + (i * sizeof(SDL_Texture*))), SDL_BLENDMODE_BLEND);
     }
@@ -74,6 +78,46 @@ void update(Global *global) {
         SDL_GetWindowSize(global->Window.window, &(global->Window.width), &(global->Window.height));
     }
     else if (keyboard_state[SDL_SCANCODE_F]) SDL_SetWindowFullscreen(global->Window.window, SDL_WINDOW_FULLSCREEN);
+
+    static int acceleration = 10;
+    static int speed = 0;
+    // static SDL_bool still = SDL_TRUE;
+    //if (acceleration != 10) acceleration++;
+    if (global->stage == TITLE_SCREEN)
+        for (int i = 0; i < 8; i++)
+            if (keyboard_state[VALID_KEYS[i]])
+                global->stage = 1;
+    if (global->stage == 1) {
+        if (global->rects[DINO_00].y > global->Window.height - 2 * SIZES[GROUND_TILE][HEIGHT] && global->speeds[DINO_00] != 0) {
+            global->speeds[DINO_00] = 0;
+            global->rects[DINO_00].y--;
+        }
+        if (global->rects[DINO_00].x > global->Window.height - 2 * SIZES[GROUND_TILE][HEIGHT] && speed != 0) {
+            speed = 0;
+            global->rects[DINO_00].x--;
+        }
+        if (global->rects[SKY].y == global->Window.height) global->rects[SKY].y = 0;
+
+        if (keyboard_state[SDL_SCANCODE_UP]) {
+            //global->rects[BACKGROUND].y += acceleration; // = global->entities[BACKGROUND].y++;
+            global->rects[SKY].y += acceleration;
+            global->speeds[DINO_00] += acceleration / 10;
+        }
+        else {
+//            if (global->rects[DINO_00].y < )
+                global->rects[DINO_00].y -= global->speeds[DINO_00];
+            global->speeds[DINO_00]--;
+        }
+        if (keyboard_state[SDL_SCANCODE_LEFT]) {
+            global->rects[SKY].x += acceleration;
+            speed += acceleration / 10;
+        }
+        else {
+//            if (global->rects[DINO_00].y < )
+                global->rects[DINO_00].x -= speed;
+            speed--;
+        }
+    }
 }
 
 #define GET_TEXTURE(NAME) *(global->sprites + (NAME * sizeof(SDL_Texture*)))
@@ -82,19 +126,26 @@ void draw(Global *global) {
     SDL_Rect buffer_rect;
     SDL_Texture *buffer_texture;
     SDL_RenderClear(global->renderer);
-    SDL_RenderCopy(global->renderer, GET_TEXTURE(ICE_MOUNTAIN), NULL, NULL);
 
-    DRAW(TITLE, (global->Window.width - SIZES[TITLE][WIDTH]) / 2, (global->Window.height / 4));
-/*
-    static int i = 0;
-    static SDL_bool ascending = SDL_FALSE;
-    if (i == 0 || i == 256) ascending = !ascending;
-    if (ascending) i += global->tick_count / 100 % 255;
-    else i = 255 - (global->tick_count / 100 - 255);
-    SDL_Log("%d", i);
-    SDL_SetTextureAlphaMod(GET_TEXTURE(PRESS_ANY_KEY), i);
-*/
-    DRAW(PRESS_ANY_KEY, (global->Window.width - SIZES[PRESS_ANY_KEY][WIDTH]) / 2, (global->Window.height / 4) * 3);
+    if (global->stage == TITLE_SCREEN) {
+        SDL_RenderCopy(global->renderer, GET_TEXTURE(ICE_MOUNTAIN), NULL, NULL);
+        DRAW(TITLE, (global->Window.width - SIZES[TITLE][WIDTH]) / 2, (global->Window.height / 4));
+        DRAW(PRESS_ARROW_OR_WASD, (global->Window.width - SIZES[PRESS_ARROW_OR_WASD][WIDTH]) / 2, (global->Window.height / 4) * 3);
+    }
+    else if (global->stage == 1) {
+        DRAW(SKY, global->rects[SKY].x - global->Window.width, global->rects[SKY].y - global->Window.height);
+        DRAW(SKY, global->rects[SKY].x, global->rects[SKY].y);
+        DRAW(SKY, global->rects[SKY].x + global->Window.width, global->rects[SKY].y - global->Window.height);
+
+        DRAW(SKY, global->rects[SKY].x, global->rects[SKY].y - global->Window.height);
+        DRAW(SKY, global->rects[SKY].x, global->rects[SKY].y);
+        DRAW(SKY, global->rects[SKY].x, global->rects[SKY].y + global->Window.height);
+
+//        DRAW(BACKGROUND, global->rects[BACKGROUND].x, global->rects[BACKGROUND].y);
+        for (int x = 0; x < global->Window.width; x += global->Window.width)
+            DRAW(GROUND_TILE, x, global->Window.height - SIZES[GROUND_TILE][HEIGHT]);
+        DRAW(DINO_00, global->rects[DINO_00].x, global->rects[DINO_00].y);
+    }
 
     SDL_RenderPresent(global->renderer);
 }
@@ -119,7 +170,10 @@ int main(void) {
         .exit_code = -1,
         .sprites = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * NUM_OF_CONTENTS),
         .event = NULL,
-        .tick_count = 0
+        .tick_count = 0,
+        .stage = TITLE_SCREEN,
+        .rects = {0},
+        .speeds = {0}
     };
 
     initialize(&global);
@@ -127,6 +181,8 @@ int main(void) {
     // CONTENT_PATHS is defined in content.h
     load_content(&global, CONTENT_PATHS);
 
+    global.rects[SKY].y = -1 * global.Window.height;
+    global.rects[DINO_00].y = global.Window.height - (2 * SIZES[GROUND_TILE][HEIGHT]);
     SDL_Event event;
     global.event = &event;
     while (!global.should_quit) {

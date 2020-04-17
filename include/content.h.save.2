@@ -1,0 +1,18 @@
+#ifndef CONTENT_H
+#define CONTENT_H
+
+#ifdef __WIN32
+char *CONTENT_PATHS[] = {"Content\ice_mountain.bmp", "Content\title.bmp", "Content\press_arrow_or_wasd.bmp", "Content\background.bmp", "Content\dino_sheet.bmp", "Content\ground_tile.bmp"};
+#else
+char *CONTENT_PATHS[] = {"Content/ice_mountain.bmp", "Content/title.bmp", "Content/press_arrow_or_wasd.bmp", "Content/background.bmp", "Content/ground_tile.bmp"};
+#endif
+
+#define NUM_OF_CONTENTS 6
+
+enum {ICE_MOUNTAIN, TITLE, PRESS_ARROW_OR_WASD, BACKGROUND, GROUND_TILE};
+enum {WIDTH, HEIGHT};
+int const SIZES[NUM_OF_CONTENTS][2] = {
+    {1280, 720}, {523, 90}, {1072, 40}, {1800, 893}, {572, 18}, {128, 128}
+};
+
+#endif
